@@ -176,9 +176,8 @@ func (self Selection) AttrFuncF(p PropertyName, v func(js.Object) float64) Selec
 
 //Call is a wrapper over the d3 selection call() method. No idea how it works.
 func (self Selection) Call(a Axis) Selection {
-	s := a.(*axisImpl)
 	return Selection{
-		self.obj.Call("call", s.obj),
+		self.obj.Call("call", a.obj),
 	}
 }
 
@@ -231,7 +230,7 @@ func ScaleOrdinal() OrdinalScale {
 
 //NewAxis creates a new axis object
 func NewAxis() Axis {
-	return &axisImpl{
+	return Axis{
 		d3root.Get("svg").Call("axis"),
 	}
 }
@@ -414,47 +413,40 @@ func (self Edge) String() string {
 }
 
 //Axis is a VERY thin wrapper over d3.svg.axis
-type Axis interface {
-	ScaleO(OrdinalScale) Axis
-	Scale(LinearScale) Axis
-	Orient(e Edge) Axis
-	Ticks(int64, string) Axis
-}
-
-type axisImpl struct {
+type Axis struct {
 	obj js.Object
 }
 
 //ScaleO creates an axis, given an already created ordinal scale.
-func (self *axisImpl) ScaleO(scale OrdinalScale) Axis {
-	return &axisImpl{
+func (self Axis) ScaleO(scale OrdinalScale) Axis {
+	return Axis{
 		self.obj.Call("scale", scale.obj),
 	}
 }
 
 //Scale creates an axis, given an already created linear scale.
-func (self *axisImpl) Scale(scale LinearScale) Axis {
-	return &axisImpl{
+func (self Axis) Scale(scale LinearScale) Axis {
+	return Axis{
 		self.obj.Call("scale", scale.obj),
 	}
 }
 
 //Orient binds the axis to one of the four edges.
-func (self *axisImpl) Orient(e Edge) Axis {
-	return &axisImpl{
+func (self Axis) Orient(e Edge) Axis {
+	return Axis{
 		self.obj.Call("orient", e.String()),
 	}
 }
 
 //Ticks changes the way the ticks on the axis look.  You can optionally
 //pass the 2nd parameter for formatting; use "" for no formatting.
-func (self *axisImpl) Ticks(i int64, format string) Axis {
+func (self Axis) Ticks(i int64, format string) Axis {
 	if format == "" {
-		return &axisImpl{
+		return Axis{
 			self.obj.Call("ticks", i),
 		}
 	}
-	return &axisImpl{
+	return Axis{
 		self.obj.Call("ticks", i, format),
 	}
 }
