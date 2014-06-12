@@ -24,8 +24,10 @@ type PropertyName string
 type Selection interface {
 	Append(TagName) Selection
 	SelectAll(Selector) Selection
-	Data(js.Object) Selection
+	Data(js.Object, DataKeyFunction) Selection
 	Enter() Selection
+	Exit() Selection
+	Remove() Selection
 	Style(PropertyName, func(int64) string) Selection
 	StyleS(PropertyName, string) Selection
 	Text(func(js.Object) string) Selection
@@ -53,9 +55,29 @@ func (self *selectionImpl) SelectAll(n Selector) Selection {
 	}
 }
 
-//Data provides a set of data for a data join to work with.  The argument
-//must be a JS array.
-func (self *selectionImpl) Data(arr js.Object) Selection {
+//DataKeyFunction are used to compare elements of .data() calls
+type DataKeyFunction func(js.Object) js.Object
+
+//IdentityKeyFunction used to match data elements by their values
+func IdentityKeyFunction(d js.Object) js.Object {
+	return d
+}
+
+//Data provides a set of data for a data join to work with.
+// arr must be a JS array.
+// f is the DataKeyFunction used to match data elements to the previous contents
+// by default selection.data() matches items by index
+//
+// see the following link to learn more:
+// https://github.com/mbostock/d3/wiki/Selections#exit
+func (self *selectionImpl) Data(arr js.Object, f DataKeyFunction) Selection {
+	// use the supplied function
+	if f != nil {
+		return &selectionImpl{
+			self.obj.Call("data", arr, f),
+		}
+	}
+	// use the default, by index
 	return &selectionImpl{
 		self.obj.Call("data", arr),
 	}
@@ -65,6 +87,20 @@ func (self *selectionImpl) Data(arr js.Object) Selection {
 func (self *selectionImpl) Enter() Selection {
 	return &selectionImpl{
 		self.obj.Call("enter"),
+	}
+}
+
+//Exit is the selection of elements that are no more present in the data join.
+func (self *selectionImpl) Exit() Selection {
+	return &selectionImpl{
+		self.obj.Call("exit"),
+	}
+}
+
+//Remove elements fromt he dom
+func (self *selectionImpl) Remove() Selection {
+	return &selectionImpl{
+		self.obj.Call("remove"),
 	}
 }
 
