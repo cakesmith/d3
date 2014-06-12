@@ -21,36 +21,14 @@ type PropertyName string
 //=================================================================
 
 //Selection is the d3 concept of zero or more selected elements.
-type Selection interface {
-	Append(TagName) Selection
-	SelectAll(Selector) Selection
-	Data(js.Object, DataKeyFunction) Selection
-	Enter() Selection
-	Exit() Selection
-	Remove() Selection
-	Style(PropertyName, func(js.Object) string) Selection
-	StyleS(PropertyName, string) Selection
-	Text(func(js.Object) string) Selection
-	TextS(string) Selection
-	Attr(PropertyName, int64) Selection
-	AttrF(PropertyName, float64) Selection
-	AttrS(PropertyName, string) Selection
-	AttrFunc(PropertyName, func(js.Object) int64) Selection
-	AttrFuncF(PropertyName, func(js.Object) float64) Selection
-	AttrFunc2S(PropertyName, func(js.Object, int64) string) Selection
-	AttrFuncS(PropertyName, func(js.Object) string) Selection
-	Call(Axis) Selection
-}
-
-//selectionImpl is the implementation of Selection.
-type selectionImpl struct {
+type Selection struct {
 	obj js.Object
 }
 
 //SelectAll finds all DOM elements that match selector in the current
 //selection.
-func (self *selectionImpl) SelectAll(n Selector) Selection {
-	return &selectionImpl{
+func (self Selection) SelectAll(n Selector) Selection {
+	return Selection{
 		self.obj.Call("selectAll", string(n)),
 	}
 }
@@ -70,61 +48,61 @@ func IdentityKeyFunction(d js.Object) js.Object {
 //
 // see the following link to learn more:
 // https://github.com/mbostock/d3/wiki/Selections#exit
-func (self *selectionImpl) Data(arr js.Object, f DataKeyFunction) Selection {
+func (self Selection) Data(arr js.Object, f DataKeyFunction) Selection {
 	// use the supplied function
 	if f != nil {
-		return &selectionImpl{
+		return Selection{
 			self.obj.Call("data", arr, f),
 		}
 	}
 	// use the default, by index
-	return &selectionImpl{
+	return Selection{
 		self.obj.Call("data", arr),
 	}
 }
 
 //Enter is the case of adding new elements to a data join.
-func (self *selectionImpl) Enter() Selection {
-	return &selectionImpl{
+func (self Selection) Enter() Selection {
+	return Selection{
 		self.obj.Call("enter"),
 	}
 }
 
 //Exit is the selection of elements that are no more present in the data join.
-func (self *selectionImpl) Exit() Selection {
-	return &selectionImpl{
+func (self Selection) Exit() Selection {
+	return Selection{
 		self.obj.Call("exit"),
 	}
 }
 
 //Remove elements fromt he dom
-func (self *selectionImpl) Remove() Selection {
-	return &selectionImpl{
+func (self Selection) Remove() Selection {
+	return Selection{
 		self.obj.Call("remove"),
 	}
 }
 
 //Append adds elements to the current selection.  The parameter is
 //a tag name to be added.
-func (self *selectionImpl) Append(n TagName) Selection {
-	return &selectionImpl{
+func (self Selection) Append(n TagName) Selection {
+	return Selection{
 		self.obj.Call("append", string(n)),
 	}
 }
 
 //Style modifies the CSS attribute prop of the selection.  The function
 //is passed each element of the data set to use in computing the value.
-func (self *selectionImpl) Style(prop PropertyName, f func(js.Object) string) Selection {
+func (self Selection) Style(prop PropertyName, f func(js.Object) string) Selection {
 	console.Log("calling style", self.obj, prop, f)
-	return &selectionImpl{
+	return Selection{
 		self.obj.Call("style", string(prop), f),
 	}
 }
 
 //StyleConst modifies the CSS attribute prop of the selection to be a
 //constant value.
-func (self *selectionImpl) StyleS(prop PropertyName, value string) Selection {
-	return &selectionImpl{
+func (self Selection) StyleS(prop PropertyName, value string) Selection {
+	return Selection{
 		self.obj.Call("style", string(prop), value),
 	}
 }
@@ -132,74 +110,74 @@ func (self *selectionImpl) StyleS(prop PropertyName, value string) Selection {
 //Text modifies the text portion of the selected elements to be the return
 //values of the function.  The function is called for each value in the
 //dataset.
-func (self *selectionImpl) Text(f func(js.Object) string) Selection {
-	return &selectionImpl{
+func (self Selection) Text(f func(js.Object) string) Selection {
+	return Selection{
 		self.obj.Call("text", f),
 	}
 }
 
 //TextS modifies the text portion of the selected elements to be
 //a constant value.
-func (self *selectionImpl) TextS(v string) Selection {
-	return &selectionImpl{
+func (self Selection) TextS(v string) Selection {
+	return Selection{
 		self.obj.Call("text", v),
 	}
 }
 
 //Attr sets an attribute of the selection to a particular value.
-func (self *selectionImpl) Attr(p PropertyName, v int64) Selection {
-	return &selectionImpl{
+func (self Selection) Attr(p PropertyName, v int64) Selection {
+	return Selection{
 		self.obj.Call("attr", string(p), v),
 	}
 }
 
 //AttrF sets an attribute of the selection to a particular value.
-func (self *selectionImpl) AttrF(p PropertyName, v float64) Selection {
-	return &selectionImpl{
+func (self Selection) AttrF(p PropertyName, v float64) Selection {
+	return Selection{
 		self.obj.Call("attr", string(p), v),
 	}
 }
 
 //Attr sets an attribute of the selection to a string value.
-func (self *selectionImpl) AttrS(p PropertyName, v string) Selection {
-	return &selectionImpl{
+func (self Selection) AttrS(p PropertyName, v string) Selection {
+	return Selection{
 		self.obj.Call("attr", string(p), v),
 	}
 }
 
 //AttrFunc2S sets an attribute to a function of two variables with the
 //second being the already extracted integer.
-func (self *selectionImpl) AttrFunc2S(p PropertyName, v func(js.Object, int64) string) Selection {
-	return &selectionImpl{
+func (self Selection) AttrFunc2S(p PropertyName, v func(js.Object, int64) string) Selection {
+	return Selection{
 		self.obj.Call("attr", string(p), v),
 	}
 }
 
 //AttrFuncS sets an attribute to a function of the data object
-func (self *selectionImpl) AttrFuncS(p PropertyName, v func(js.Object) string) Selection {
-	return &selectionImpl{
+func (self Selection) AttrFuncS(p PropertyName, v func(js.Object) string) Selection {
+	return Selection{
 		self.obj.Call("attr", string(p), v),
 	}
 }
 
 //AttrFunc sets an attribute to a function of one variable that produces an int.
-func (self *selectionImpl) AttrFunc(p PropertyName, v func(js.Object) int64) Selection {
-	return &selectionImpl{
+func (self Selection) AttrFunc(p PropertyName, v func(js.Object) int64) Selection {
+	return Selection{
 		self.obj.Call("attr", string(p), v),
 	}
 }
 
 //AttrFuncF sets an attribute to a function of one variable that produces a float.
-func (self *selectionImpl) AttrFuncF(p PropertyName, v func(js.Object) float64) Selection {
-	return &selectionImpl{
+func (self Selection) AttrFuncF(p PropertyName, v func(js.Object) float64) Selection {
+	return Selection{
 		self.obj.Call("attr", string(p), v),
 	}
 }
 
 //Call is a wrapper over the d3 selection call() method. No idea how it works.
-func (self *selectionImpl) Call(a Axis) Selection {
+func (self Selection) Call(a Axis) Selection {
 	s := a.(*axisImpl)
-	return &selectionImpl{
+	return Selection{
 		self.obj.Call("call", s.obj),
 	}
 }
@@ -232,7 +210,7 @@ func MaxF(v js.Object, fn ExtractorFuncF) float64 {
 
 //Select is d3.select() and creates a selection from the selector.
 func Select(n Selector) Selection {
-	return &selectionImpl{
+	return Selection{
 		d3root.Call("select", string(n)),
 	}
 }
