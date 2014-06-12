@@ -224,7 +224,7 @@ func ScaleLinear() LinearScale {
 
 //ScaleLinear is d3.scale.ordinal and returns a Ordinal
 func ScaleOrdinal() OrdinalScale {
-	return &ordinalScaleImpl{
+	return OrdinalScale{
 		d3root.Get("scale").Call("ordinal"),
 	}
 }
@@ -347,43 +347,33 @@ func (self LinearScale) FuncF(fn ExtractorFuncF) func(js.Object) float64 {
 //=================================================================
 
 //OrdinalScale wraps d3.scale.ordinal
-type OrdinalScale interface {
-	Domain(js.Object) OrdinalScale
-	RangeBands([]int64) OrdinalScale
-	RangeBand() int64
-	RangeBandF() float64
-	RangeBands3([]int64, float64) OrdinalScale
-	Ordinal(obj js.Object, fn ExtractorFuncO) int64
-}
-
-//ordinalScaleImpl is the implementation of LinearScale.
-type ordinalScaleImpl struct {
+type OrdinalScale struct {
 	obj js.Object
 }
 
 //Domair should be an array of items.
-func (self *ordinalScaleImpl) Domain(obj js.Object) OrdinalScale {
-	return &ordinalScaleImpl{
+func (self OrdinalScale) Domain(obj js.Object) OrdinalScale {
+	return OrdinalScale{
 		self.obj.Call("domain", obj),
 	}
 }
 
-func (self *ordinalScaleImpl) RangeBands(b []int64) OrdinalScale {
-	return &ordinalScaleImpl{
+func (self OrdinalScale) RangeBands(b []int64) OrdinalScale {
+	return OrdinalScale{
 		self.obj.Call("rangeBands", b),
 	}
 }
 
-func (self *ordinalScaleImpl) RangeBand() int64 {
+func (self OrdinalScale) RangeBand() int64 {
 	return int64(self.obj.Call("rangeBand").Int())
 }
 
-func (self *ordinalScaleImpl) RangeBandF() float64 {
+func (self OrdinalScale) RangeBandF() float64 {
 	return self.obj.Call("rangeBand").Float()
 }
 
-func (self *ordinalScaleImpl) RangeBands3(b []int64, f float64) OrdinalScale {
-	return &ordinalScaleImpl{
+func (self OrdinalScale) RangeBands3(b []int64, f float64) OrdinalScale {
+	return OrdinalScale{
 		self.obj.Call("rangeBands", b, f),
 	}
 }
@@ -391,7 +381,7 @@ func (self *ordinalScaleImpl) RangeBands3(b []int64, f float64) OrdinalScale {
 //Ordinal calls the scale to interpolate a value into its range.  If the
 //second function is nil, then we assume the ojbect is already in the ordinal
 //domain.
-func (self *ordinalScaleImpl) Ordinal(obj js.Object, fn ExtractorFuncO) int64 {
+func (self OrdinalScale) Ordinal(obj js.Object, fn ExtractorFuncO) int64 {
 	if fn != nil {
 		return int64(self.obj.Invoke(fn(obj)).Int())
 	}
@@ -437,9 +427,8 @@ type axisImpl struct {
 
 //ScaleO creates an axis, given an already created ordinal scale.
 func (self *axisImpl) ScaleO(scale OrdinalScale) Axis {
-	s := scale.(*ordinalScaleImpl)
 	return &axisImpl{
-		self.obj.Call("scale", s.obj),
+		self.obj.Call("scale", scale.obj),
 	}
 }
 
