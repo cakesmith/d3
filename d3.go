@@ -217,7 +217,7 @@ func Select(n Selector) Selection {
 
 //ScaleLinear is d3.scale.linear and returns a LinearScale
 func ScaleLinear() LinearScale {
-	return &linearScaleImpl{
+	return LinearScale{
 		d3root.Get("scale").Call("linear"),
 	}
 }
@@ -260,50 +260,38 @@ func TSV(filename string, filter FilterFunc, callback func(js.Object, js.Object)
 //=================================================================
 
 //LinearScale is a wrapper around the d3 concept of the same name.
-type LinearScale interface {
-	Domain([]int64) LinearScale
-	DomainF([]float64) LinearScale
-	Range([]int64) LinearScale
-	Linear(js.Object, ExtractorFunc) int64
-	LinearF(js.Object, ExtractorFuncF) float64
-	Invert(js.Object, ExtractorFunc) int64
-	Func(ExtractorFunc) func(js.Object) int64
-	FuncF(ExtractorFuncF) func(js.Object) float64
-}
-
-//linearScaleImpl is the implementation of LinearScale.
-type linearScaleImpl struct {
+type LinearScale struct {
 	obj js.Object
 }
 
 //Domain sets the domain of the linear domain.
-func (self *linearScaleImpl) Domain(d []int64) LinearScale {
-	return &linearScaleImpl{
+func (self LinearScale) Domain(d []int64) LinearScale {
+	return LinearScale{
 		self.obj.Call("domain", d),
 	}
 }
 
 //Domain sets the domain of the linear domain.
-func (self *linearScaleImpl) DomainF(d []float64) LinearScale {
+func (self LinearScale) DomainF(d []float64) LinearScale {
 	in := js.Global.Get("Array").New()
 	for i := 0; i < len(d); i++ {
 		in.SetIndex(i, d[i])
 	}
 
-	return &linearScaleImpl{
+	return LinearScale{
 		self.obj.Call("domain", in),
 	}
 }
 
 //Range sets the range of the linear domain.
-func (self *linearScaleImpl) Range(d []int64) LinearScale {
-	return &linearScaleImpl{
+func (self LinearScale) Range(d []int64) LinearScale {
+	return LinearScale{
 		self.obj.Call("range", d),
 	}
 }
 
 //Linear calls the scale to interpolate a value into its range.
-func (self *linearScaleImpl) Linear(obj js.Object, fn ExtractorFunc) int64 {
+func (self LinearScale) Linear(obj js.Object, fn ExtractorFunc) int64 {
 	if fn != nil {
 		return int64(self.obj.Invoke(fn(obj)).Int())
 	}
@@ -313,7 +301,7 @@ func (self *linearScaleImpl) Linear(obj js.Object, fn ExtractorFunc) int64 {
 //LinearF calls the scale to interpolate a value into its range and returns
 //the results as a float. If the extractor function is specified, it should
 //pull the floating point input value out of the provided object.
-func (self *linearScaleImpl) LinearF(obj js.Object, fn ExtractorFuncF) float64 {
+func (self LinearScale) LinearF(obj js.Object, fn ExtractorFuncF) float64 {
 	if fn != nil {
 		return self.obj.Invoke(fn(obj)).Float()
 	}
@@ -321,7 +309,7 @@ func (self *linearScaleImpl) LinearF(obj js.Object, fn ExtractorFuncF) float64 {
 }
 
 //Invert calls the scale to interpolate a range value into its domain.
-func (self *linearScaleImpl) Invert(obj js.Object, fn ExtractorFunc) int64 {
+func (self LinearScale) Invert(obj js.Object, fn ExtractorFunc) int64 {
 	if fn != nil {
 		return int64(self.obj.Call("invert", fn(obj)).Int())
 	}
@@ -331,7 +319,7 @@ func (self *linearScaleImpl) Invert(obj js.Object, fn ExtractorFunc) int64 {
 //Func returns a function wrapper around this scale so it can be used
 //in the Go side as a function that can extract the values from the
 //objects as integers.
-func (self *linearScaleImpl) Func(fn ExtractorFunc) func(js.Object) int64 {
+func (self LinearScale) Func(fn ExtractorFunc) func(js.Object) int64 {
 	if fn != nil {
 		return func(obj js.Object) int64 {
 			return int64(self.obj.Invoke(fn(obj)).Int())
@@ -345,7 +333,7 @@ func (self *linearScaleImpl) Func(fn ExtractorFunc) func(js.Object) int64 {
 //FuncF returns a function wrapper around this scale so it can be used
 //in the Go side as a function that can extract the values from the
 //objects as floats.
-func (self *linearScaleImpl) FuncF(fn ExtractorFuncF) func(js.Object) float64 {
+func (self LinearScale) FuncF(fn ExtractorFuncF) func(js.Object) float64 {
 	if fn != nil {
 		return func(obj js.Object) float64 {
 			return self.obj.Invoke(fn(obj)).Float()
@@ -457,9 +445,8 @@ func (self *axisImpl) ScaleO(scale OrdinalScale) Axis {
 
 //Scale creates an axis, given an already created linear scale.
 func (self *axisImpl) Scale(scale LinearScale) Axis {
-	s := scale.(*linearScaleImpl)
 	return &axisImpl{
-		self.obj.Call("scale", s.obj),
+		self.obj.Call("scale", scale.obj),
 	}
 }
 
