@@ -24,7 +24,7 @@ type PropertyName string
 type Selection interface {
 	Append(TagName) Selection
 	SelectAll(Selector) Selection
-	Data(js.Object, DataKeyFunction) Selection
+	Data(js.Object, ExtractorFuncO) Selection
 	Enter() Selection
 	Exit() Selection
 	Remove() Selection
@@ -55,9 +55,6 @@ func (self *selectionImpl) SelectAll(n Selector) Selection {
 	}
 }
 
-//DataKeyFunction are used to compare elements of .data() calls
-type DataKeyFunction func(js.Object) js.Object
-
 //IdentityKeyFunction used to match data elements by their values
 func IdentityKeyFunction(d js.Object) js.Object {
 	return d
@@ -65,12 +62,12 @@ func IdentityKeyFunction(d js.Object) js.Object {
 
 //Data provides a set of data for a data join to work with.
 // arr must be a JS array.
-// f is the DataKeyFunction used to match data elements to the previous contents
+// f is the ExtractorFuncO used to match data elements to the previous contents
 // by default selection.data() matches items by index
 //
 // see the following link to learn more:
 // https://github.com/mbostock/d3/wiki/Selections#exit
-func (self *selectionImpl) Data(arr js.Object, f DataKeyFunction) Selection {
+func (self *selectionImpl) Data(arr js.Object, f ExtractorFuncO) Selection {
 	// use the supplied function
 	if f != nil {
 		return &selectionImpl{
