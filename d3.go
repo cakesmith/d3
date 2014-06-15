@@ -45,7 +45,7 @@ func IdentityKeyFunction(d js.Object) js.Object {
 //
 // see the following link to learn more:
 // https://github.com/mbostock/d3/wiki/Selections#exit
-func (self Selection) Data(arr js.Object, f DataKeyFunction) Selection {
+func (self Selection) Data(arr js.Object, f ExtractorFuncO) Selection {
 	// use the supplied function
 	if f != nil {
 		return Selection{

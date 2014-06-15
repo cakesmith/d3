@@ -65,7 +65,7 @@ func part2_bars(width int64, barHeight int64) {
 		x.Domain([]int64{0, d3.Max(data, extractValue)})
 		chart.Attr(propHeight, barHeight*int64(data.Length()))
 
-		bar := chart.SelectAll(pickG).Data(data).Enter().Append(gTag)
+		bar := chart.SelectAll(pickG).Data(data, nil).Enter().Append(gTag)
 		bar.AttrFunc2S(propXform, func(d js.Object, i int64) string {
 			return fmt.Sprintf("translate(0,%d)", i*barHeight)
 		})
@@ -149,7 +149,7 @@ func part3_bars(overall_width, overall_height, top, right, bottom, left int64) {
 			AttrS(propDy, "0.71em").StyleS(propTextAnchor, "end").TextS("Frequency")
 
 		//BAR
-		rect := chart.SelectAll(pickBar).Data(data).Enter().Append(rectTag)
+		rect := chart.SelectAll(pickBar).Data(data, nil).Enter().Append(rectTag)
 		rect.AttrS(propClass, "bar")
 		rect.AttrFunc(propX, func(d js.Object) int64 {
 			return x.Ordinal(d, extractLetter)
