@@ -58,10 +58,10 @@ func part2_bars(width int64, barHeight int64) {
 
 	//read sample data from the server
 	d3.TSV("sample.tsv", filterIntData, func(err *js.Object, data *js.Object) {
-		/*		if err == nil {
-				console.Error(*err)
-				return
-			}*/
+		if err != nil {
+			console.Error(*err)
+			return
+		}
 		x.Domain([]int64{0, d3.Max(data, extractValue)})
 		chart.Attr(propHeight, barHeight*int64(data.Length()))
 
@@ -133,10 +133,10 @@ func part3_bars(overall_width, overall_height, top, right, bottom, left int64) {
 		AttrS(propXform, fmt.Sprintf("translate(%d,%d)", left, top))
 
 	d3.TSV("letter_freq.tsv", filterFloatData, func(err *js.Object, data *js.Object) {
-		/*		if err == nil {
-				console.Error(err)
-				return
-			}*/
+		if err != nil {
+			console.Error(err)
+			return
+		}
 		x.Domain(extractAllLetters(data))
 		y.DomainF([]float64{0.0, d3.MaxF(data, extractFreq)})
 
