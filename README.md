@@ -17,5 +17,12 @@ Install
 go get -u github.com/iansmith/d3
 ````
 
+Testing
+=======
+```
+cd tutorial
+gopherjs serve
+````
+
 Check out the [demo](http://iansmith.github.io/d3/tutorial.html).
   

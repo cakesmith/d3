@@ -24,25 +24,25 @@ type PropertyName string
 type Selection interface {
 	Append(TagName) Selection
 	SelectAll(Selector) Selection
-	Data(js.Object) Selection
+	Data(*js.Object) Selection
 	Enter() Selection
-	Style(PropertyName, func(js.Object) string) Selection
+	Style(PropertyName, func(*js.Object) string) Selection
 	StyleS(PropertyName, string) Selection
-	Text(func(js.Object) string) Selection
+	Text(func(*js.Object) string) Selection
 	TextS(string) Selection
 	Attr(PropertyName, int64) Selection
 	AttrF(PropertyName, float64) Selection
 	AttrS(PropertyName, string) Selection
-	AttrFunc(PropertyName, func(js.Object) int64) Selection
-	AttrFuncF(PropertyName, func(js.Object) float64) Selection
-	AttrFunc2S(PropertyName, func(js.Object, int64) string) Selection
-	AttrFuncS(PropertyName, func(js.Object) string) Selection
+	AttrFunc(PropertyName, func(*js.Object) int64) Selection
+	AttrFuncF(PropertyName, func(*js.Object) float64) Selection
+	AttrFunc2S(PropertyName, func(*js.Object, int64) string) Selection
+	AttrFuncS(PropertyName, func(*js.Object) string) Selection
 	Call(Axis) Selection
 }
 
 //selectionImpl is the implementation of Selection.
 type selectionImpl struct {
-	obj js.Object
+	obj *js.Object
 }
 
 //SelectAll finds all DOM elements that match selector in the current
@@ -55,7 +55,7 @@ func (self *selectionImpl) SelectAll(n Selector) Selection {
 
 //Data provides a set of data for a data join to work with.  The argument
 //must be a JS array.
-func (self *selectionImpl) Data(arr js.Object) Selection {
+func (self *selectionImpl) Data(arr *js.Object) Selection {
 	return &selectionImpl{
 		self.obj.Call("data", arr),
 	}
@@ -78,7 +78,7 @@ func (self *selectionImpl) Append(n TagName) Selection {
 
 //Style modifies the CSS attribute prop of the selection.  The function
 //is passed each element of the data set to use in computing the value.
-func (self *selectionImpl) Style(prop PropertyName, f func(js.Object) string) Selection {
+func (self *selectionImpl) Style(prop PropertyName, f func(*js.Object) string) Selection {
 	console.Log("calling style", self.obj, prop, f)
 	return &selectionImpl{
 		self.obj.Call("style", string(prop), f),
@@ -96,7 +96,7 @@ func (self *selectionImpl) StyleS(prop PropertyName, value string) Selection {
 //Text modifies the text portion of the selected elements to be the return
 //values of the function.  The function is called for each value in the
 //dataset.
-func (self *selectionImpl) Text(f func(js.Object) string) Selection {
+func (self *selectionImpl) Text(f func(*js.Object) string) Selection {
 	return &selectionImpl{
 		self.obj.Call("text", f),
 	}
@@ -133,28 +133,28 @@ func (self *selectionImpl) AttrS(p PropertyName, v string) Selection {
 
 //AttrFunc2S sets an attribute to a function of two variables with the
 //second being the already extracted integer.
-func (self *selectionImpl) AttrFunc2S(p PropertyName, v func(js.Object, int64) string) Selection {
+func (self *selectionImpl) AttrFunc2S(p PropertyName, v func(*js.Object, int64) string) Selection {
 	return &selectionImpl{
 		self.obj.Call("attr", string(p), v),
 	}
 }
 
 //AttrFuncS sets an attribute to a function of the data object
-func (self *selectionImpl) AttrFuncS(p PropertyName, v func(js.Object) string) Selection {
+func (self *selectionImpl) AttrFuncS(p PropertyName, v func(*js.Object) string) Selection {
 	return &selectionImpl{
 		self.obj.Call("attr", string(p), v),
 	}
 }
 
 //AttrFunc sets an attribute to a function of one variable that produces an int.
-func (self *selectionImpl) AttrFunc(p PropertyName, v func(js.Object) int64) Selection {
+func (self *selectionImpl) AttrFunc(p PropertyName, v func(*js.Object) int64) Selection {
 	return &selectionImpl{
 		self.obj.Call("attr", string(p), v),
 	}
 }
 
 //AttrFuncF sets an attribute to a function of one variable that produces a float.
-func (self *selectionImpl) AttrFuncF(p PropertyName, v func(js.Object) float64) Selection {
+func (self *selectionImpl) AttrFuncF(p PropertyName, v func(*js.Object) float64) Selection {
 	return &selectionImpl{
 		self.obj.Call("attr", string(p), v),
 	}
@@ -177,7 +177,7 @@ func (self *selectionImpl) Call(a Axis) Selection {
 //Max is d3.max with a function that passes over each object in the array
 //supplied as the first argument. If the second function is nil, we assume
 //that the array contains (JS) integers.
-func Max(v js.Object, fn ExtractorFunc) int64 {
+func Max(v *js.Object, fn ExtractorFunc) int64 {
 	if fn != nil {
 		return int64(d3root.Call("max", v, fn).Int())
 	}
@@ -187,7 +187,7 @@ func Max(v js.Object, fn ExtractorFunc) int64 {
 //MaxF is d3.max with a function that passes over each object in the array
 //supplied as the first argument. If the second function is nil, we assume
 //that the array contains (JS) floats.
-func MaxF(v js.Object, fn ExtractorFuncF) float64 {
+func MaxF(v *js.Object, fn ExtractorFuncF) float64 {
 	if fn != nil {
 		return d3root.Call("max", v, fn).Float()
 	}
@@ -225,21 +225,21 @@ func NewAxis() Axis {
 //FilterFunc converts "raw" objects to their formatted counterparts.
 //Raw version has only string fields, but formatted version should have
 //the parsed values. If this func returns nil, that item is ignored.
-type FilterFunc func(js.Object) js.Object
+type FilterFunc func(*js.Object) *js.Object
 
 //ExtractorFunc is a fun that can pull the int value from an object
-type ExtractorFunc func(js.Object) int64
+type ExtractorFunc func(*js.Object) int64
 
 //ExtractorFuncF is a fun that can pull the float value from an object
-type ExtractorFuncF func(js.Object) float64
+type ExtractorFuncF func(*js.Object) float64
 
 //ExtractorFuncO is a fun that can pull the named (usually ordinal) value from the object
-type ExtractorFuncO func(js.Object) js.Object
+type ExtractorFuncO func(*js.Object) *js.Object
 
 //TSV loads a tab separated value called filename from the server.
 //Each loaded element is passed through filter func and the final
 //result is handed to callback.
-func TSV(filename string, filter FilterFunc, callback func(js.Object, js.Object)) {
+func TSV(filename string, filter FilterFunc, callback func(*js.Object, *js.Object)) {
 	d3root.Call("tsv", filename, filter, callback)
 }
 
@@ -250,16 +250,16 @@ type LinearScale interface {
 	Domain([]int64) LinearScale
 	DomainF([]float64) LinearScale
 	Range([]int64) LinearScale
-	Linear(js.Object, ExtractorFunc) int64
-	LinearF(js.Object, ExtractorFuncF) float64
-	Invert(js.Object, ExtractorFunc) int64
-	Func(ExtractorFunc) func(js.Object) int64
-	FuncF(ExtractorFuncF) func(js.Object) float64
+	Linear(*js.Object, ExtractorFunc) int64
+	LinearF(*js.Object, ExtractorFuncF) float64
+	Invert(*js.Object, ExtractorFunc) int64
+	Func(ExtractorFunc) func(*js.Object) int64
+	FuncF(ExtractorFuncF) func(*js.Object) float64
 }
 
 //linearScaleImpl is the implementation of LinearScale.
 type linearScaleImpl struct {
-	obj js.Object
+	obj *js.Object
 }
 
 //Domain sets the domain of the linear domain.
@@ -289,7 +289,7 @@ func (self *linearScaleImpl) Range(d []int64) LinearScale {
 }
 
 //Linear calls the scale to interpolate a value into its range.
-func (self *linearScaleImpl) Linear(obj js.Object, fn ExtractorFunc) int64 {
+func (self *linearScaleImpl) Linear(obj *js.Object, fn ExtractorFunc) int64 {
 	if fn != nil {
 		return int64(self.obj.Invoke(fn(obj)).Int())
 	}
@@ -299,7 +299,7 @@ func (self *linearScaleImpl) Linear(obj js.Object, fn ExtractorFunc) int64 {
 //LinearF calls the scale to interpolate a value into its range and returns
 //the results as a float. If the extractor function is specified, it should
 //pull the floating point input value out of the provided object.
-func (self *linearScaleImpl) LinearF(obj js.Object, fn ExtractorFuncF) float64 {
+func (self *linearScaleImpl) LinearF(obj *js.Object, fn ExtractorFuncF) float64 {
 	if fn != nil {
 		return self.obj.Invoke(fn(obj)).Float()
 	}
@@ -307,7 +307,7 @@ func (self *linearScaleImpl) LinearF(obj js.Object, fn ExtractorFuncF) float64 {
 }
 
 //Invert calls the scale to interpolate a range value into its domain.
-func (self *linearScaleImpl) Invert(obj js.Object, fn ExtractorFunc) int64 {
+func (self *linearScaleImpl) Invert(obj *js.Object, fn ExtractorFunc) int64 {
 	if fn != nil {
 		return int64(self.obj.Call("invert", fn(obj)).Int())
 	}
@@ -317,13 +317,13 @@ func (self *linearScaleImpl) Invert(obj js.Object, fn ExtractorFunc) int64 {
 //Func returns a function wrapper around this scale so it can be used
 //in the Go side as a function that can extract the values from the
 //objects as integers.
-func (self *linearScaleImpl) Func(fn ExtractorFunc) func(js.Object) int64 {
+func (self *linearScaleImpl) Func(fn ExtractorFunc) func(*js.Object) int64 {
 	if fn != nil {
-		return func(obj js.Object) int64 {
+		return func(obj *js.Object) int64 {
 			return int64(self.obj.Invoke(fn(obj)).Int())
 		}
 	}
-	return func(obj js.Object) int64 {
+	return func(obj *js.Object) int64 {
 		return int64(self.obj.Invoke(obj.Int()).Int())
 	}
 }
@@ -331,13 +331,13 @@ func (self *linearScaleImpl) Func(fn ExtractorFunc) func(js.Object) int64 {
 //FuncF returns a function wrapper around this scale so it can be used
 //in the Go side as a function that can extract the values from the
 //objects as floats.
-func (self *linearScaleImpl) FuncF(fn ExtractorFuncF) func(js.Object) float64 {
+func (self *linearScaleImpl) FuncF(fn ExtractorFuncF) func(*js.Object) float64 {
 	if fn != nil {
-		return func(obj js.Object) float64 {
+		return func(obj *js.Object) float64 {
 			return self.obj.Invoke(fn(obj)).Float()
 		}
 	}
-	return func(obj js.Object) float64 {
+	return func(obj *js.Object) float64 {
 		return self.obj.Invoke(obj.Float()).Float()
 	}
 }
@@ -346,21 +346,21 @@ func (self *linearScaleImpl) FuncF(fn ExtractorFuncF) func(js.Object) float64 {
 
 //OrdinalScale wraps d3.scale.ordinal
 type OrdinalScale interface {
-	Domain(js.Object) OrdinalScale
+	Domain(*js.Object) OrdinalScale
 	RangeBands([]int64) OrdinalScale
 	RangeBand() int64
 	RangeBandF() float64
 	RangeBands3([]int64, float64) OrdinalScale
-	Ordinal(obj js.Object, fn ExtractorFuncO) int64
+	Ordinal(obj *js.Object, fn ExtractorFuncO) int64
 }
 
 //ordinalScaleImpl is the implementation of LinearScale.
 type ordinalScaleImpl struct {
-	obj js.Object
+	obj *js.Object
 }
 
 //Domair should be an array of items.
-func (self *ordinalScaleImpl) Domain(obj js.Object) OrdinalScale {
+func (self *ordinalScaleImpl) Domain(obj *js.Object) OrdinalScale {
 	return &ordinalScaleImpl{
 		self.obj.Call("domain", obj),
 	}
@@ -389,7 +389,7 @@ func (self *ordinalScaleImpl) RangeBands3(b []int64, f float64) OrdinalScale {
 //Ordinal calls the scale to interpolate a value into its range.  If the
 //second function is nil, then we assume the ojbect is already in the ordinal
 //domain.
-func (self *ordinalScaleImpl) Ordinal(obj js.Object, fn ExtractorFuncO) int64 {
+func (self *ordinalScaleImpl) Ordinal(obj *js.Object, fn ExtractorFuncO) int64 {
 	if fn != nil {
 		return int64(self.obj.Invoke(fn(obj)).Int())
 	}
@@ -430,7 +430,7 @@ type Axis interface {
 }
 
 type axisImpl struct {
-	obj js.Object
+	obj *js.Object
 }
 
 //ScaleO creates an axis, given an already created ordinal scale.
